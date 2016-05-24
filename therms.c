@@ -65,7 +65,7 @@ void doAction (int action) {
 			miliseconds = 300 + rand() % REST_TIME;
 			break;
 	}
-	printf("%sLOCKER: %d  PROCESS: %d  GENDER: %s\n", actionStr, lockerRoomNo, rank, (gender == FEMALE) ? "Female" : "Male");
+	printf("%sLOCKER: %d  PROCESS: %d  GENDER: %s  TIME: %d\n", actionStr, lockerRoomNo, rank, (gender == FEMALE) ? "Female" : "Male  ", scalarTime);
 	usleep(miliseconds * 1000);
 }
 
@@ -285,4 +285,3 @@ int main (int argc, char **argv) {
 	mainLoop();
 	finalize();
 }
-
