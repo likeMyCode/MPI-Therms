@@ -11,17 +11,17 @@ typedef int bool;
 #define true 1
 #define false 0
 
-#define CHANGE_TIME 	100
+#define CHANGE_TIME 		100
 #define SWIM_TIME 		800
 #define REST_TIME 		1500
-#define REQUEST_TAG 	1
-#define RESPONSE_TAG 	2
+#define REQUEST_TAG 		1
+#define RESPONSE_TAG 		2
 #define RANK 			0
 #define GENDER 			1
 #define LOCKER 			2
 #define STATE 			3
 #define TIME 			4
-
+#define SCALAR_TIME_PERIOD 	1
 
 //-----------------------------------------------------------------//
 
@@ -73,17 +73,23 @@ void doAction (int action) {
 void* answerToProcesses() {
 	while (1) {
 		MPI_Status status;
-		int receiveMsg[1];
+		int receiveMsg[2];
 		int sendMsg[5];	
 		
-		MPI_Recv(receiveMsg, 1, MPI_INT, MPI_ANY_SOURCE, REQUEST_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(receiveMsg, 2, MPI_INT, MPI_ANY_SOURCE, REQUEST_TAG, MPI_COMM_WORLD, &status);
+
+		if(receiveMsg[1] > scalarTime) scalarTime = receiveMsg[1];
+		
+		scalarTime += SCALAR_TIME_PERIOD;
 
 		sendMsg[RANK] = rank;
 		sendMsg[GENDER] = gender;
 		sendMsg[LOCKER] = lockerRoomNo;
 		sendMsg[STATE] = state;
 		sendMsg[TIME] = scalarTime;
-
+		
+		scalarTime += SCALAR_TIME_PERIOD;
+		
 		MPI_Send(sendMsg, 5, MPI_INT, receiveMsg[0], RESPONSE_TAG, MPI_COMM_WORLD);
 	}
 }
@@ -196,6 +202,10 @@ void receiveLocalStateResponse () {
 		
 		MPI_Recv(receiveMsg, 5, MPI_INT, MPI_ANY_SOURCE, RESPONSE_TAG, MPI_COMM_WORLD, &status);	
 		
+		if(receiveMsg[4] > scalarTime) scalarTime = receiveMsg[4];
+
+		scalarTime += SCALAR_TIME_PERIOD;
+
 		receivedData[i][0] = receiveMsg[0];		
 		receivedData[i][1] = receiveMsg[1];
 		receivedData[i][2] = receiveMsg[2];
@@ -232,9 +242,12 @@ void receiveLocalStateResponse () {
 
 
 void sendLocalStateRequest () {
-	int i;
+	int i, sendMsg[2];
+	scalarTime += SCALAR_TIME_PERIOD;
+	sendMsg[0] = rank;
+	sendMsg[1] = scalarTime;
 	for (i = 0; i < people; i++) 
-		MPI_Send(&rank, 1, MPI_INT, i, REQUEST_TAG, MPI_COMM_WORLD);
+		MPI_Send(sendMsg, 2, MPI_INT, i, REQUEST_TAG, MPI_COMM_WORLD);
 }
 
 
@@ -272,3 +285,4 @@ int main (int argc, char **argv) {
 	mainLoop();
 	finalize();
 }
+
